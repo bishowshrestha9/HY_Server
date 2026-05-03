@@ -1,0 +1,58 @@
+# Use PHP CLI for artisan serve
+FROM php:8.4-cli
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    zip \
+    unzip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Copy all application files
+COPY . .
+
+# Copy Swagger UI assets to public directory for static serving
+# Use /swagger-assets/ instead of /docs/asset/ to avoid conflict with /docs route
+RUN mkdir -p /var/www/html/public/swagger-assets && \
+    cp -r /var/www/html/vendor/swagger-api/swagger-ui/dist/* /var/www/html/public/swagger-assets/ 2>/dev/null || echo "Swagger assets not found in vendor, will be served via routes"
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 755 /var/www/html/public/swagger-assets 2>/dev/null || true \
+    && mkdir -p /var/www/html/storage/api-docs \
+    && chmod -R 755 /var/www/html/storage/api-docs
+
+# Run post-install scripts
+RUN composer dump-autoload --optimize || true
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose port (Render will set PORT env variable)
+EXPOSE 8000
+
+# Use entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]

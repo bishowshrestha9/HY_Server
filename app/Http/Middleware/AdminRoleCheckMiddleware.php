@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class AdminRoleCheckMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        // auth:sanctum middleware should have already authenticated the user
+        // Check if user is set
+        $user = $request->user();
+        
+        // Also try Auth::user() as fallback
+        if (!$user) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+        }
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Check if user has admin role
+        if ($user->role !== 'admin' && $user->role !== 'super_admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to access this resource',
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
