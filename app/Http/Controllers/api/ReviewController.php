@@ -12,11 +12,29 @@ class ReviewController extends Controller
 {
     private ReviewService $reviewService;
 
+
+    
+
     public function __construct(ReviewService $reviewService)
     {
         $this->reviewService = $reviewService;
     }
 
+    /**
+     * @OA\Post(
+     *   path="/reviews",
+     *   tags={"Reviews"},
+     *   summary="Submit a review",
+     *   @OA\RequestBody(required=true, @OA\JsonContent(
+     *     required={"name","email","rating","comment"},
+     *     @OA\Property(property="name", type="string"),
+     *     @OA\Property(property="email", type="string"),
+     *     @OA\Property(property="rating", type="integer"),
+     *     @OA\Property(property="comment", type="string")
+     *   )),
+     *   @OA\Response(response=201, description="Review submitted")
+     * )
+     */
     public function submitReview(ReviewsRequest $request)
     {
         try {
@@ -31,6 +49,16 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/reviews",
+     *   tags={"Reviews"},
+     *   summary="Get all reviews (admin)",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="List of reviews")
+     * )
+     */
     public function getReviews(Request $request)
     {
         try {
@@ -61,19 +89,24 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/reviews/publishable",
+     *   tags={"Reviews"},
+     *   summary="Get publishable reviews",
+     *   @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="List of publishable reviews")
+     * )
+     */
     public function getPublishableReviews(Request $request)
     {
         try {
             $perPage = $request->input('per_page', 8);
             $reviews = $this->reviewService->getPublishableReviews($perPage);
 
-            if ($reviews->isEmpty()) {
-                return response()->json(['status' => false, 'message' => 'No publishable reviews found'], 404);
-            }
-
             return response()->json([
                 'status' => true,
-                'message' => 'Publishable reviews fetched successfully',
+                'message' => $reviews->isEmpty() ? 'No publishable reviews found' : 'Publishable reviews fetched successfully',
                 'data' => $reviews->items(),
                 'pagination' => [
                     'current_page' => $reviews->currentPage(),
@@ -88,6 +121,16 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *   path="/reviews/{id}",
+     *   tags={"Reviews"},
+     *   summary="Delete review",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Review deleted")
+     * )
+     */
     public function delete($id)
     {
         try {
@@ -98,6 +141,16 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/reviews/{id}/approve",
+     *   tags={"Reviews"},
+     *   summary="Approve review",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Review approved")
+     * )
+     */
     public function approveReview($id)
     {
         try {
@@ -114,18 +167,22 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/reviews/latest",
+     *   tags={"Reviews"},
+     *   summary="Get latest reviews",
+     *   @OA\Response(response=200, description="Latest reviews")
+     * )
+     */
     public function getFourReviews()
     {
         try {
             $reviews = $this->reviewService->getLatestReviews(4);
 
-            if ($reviews->isEmpty()) {
-                return response()->json(['status' => false, 'message' => 'No reviews found'], 404);
-            }
-
             return response()->json([
                 'status' => true,
-                'message' => 'Reviews fetched successfully',
+                'message' => $reviews->isEmpty() ? 'No reviews found' : 'Reviews fetched successfully',
                 'data' => $reviews,
             ], 200);
 
@@ -134,6 +191,15 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/reviews/stats",
+     *   tags={"Reviews"},
+     *   summary="Get positive and negative reviews count",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Review stats")
+     * )
+     */
     public function getPositiveAndNegativeReviewsCount()
     {
         try {

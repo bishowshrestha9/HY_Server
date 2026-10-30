@@ -16,6 +16,15 @@ class InstructorController extends Controller
         $this->instructorService = $instructorService;
     }
 
+    /**
+     * @OA\Get(
+     *   path="/instructors",
+     *   tags={"Instructors"},
+     *   summary="Get all instructors",
+     *   @OA\Response(response=200, description="List of instructors"),
+     *   @OA\Response(response=404, description="No instructors found")
+     * )
+     */
     public function index()
     {
         try {
@@ -37,6 +46,24 @@ class InstructorController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/instructors",
+     *   tags={"Instructors"},
+     *   summary="Create new instructor",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *     required={"name","email"},
+     *     @OA\Property(property="name", type="string"),
+     *     @OA\Property(property="email", type="string", format="email"),
+     *     @OA\Property(property="bio", type="string"),
+     *     @OA\Property(property="specialization", type="string"),
+     *     @OA\Property(property="image", type="string", format="binary")
+     * ))),
+     *   @OA\Response(response=201, description="Instructor created"),
+     *   @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function store(InstructorRequest $request)
     {
         try {
@@ -50,6 +77,16 @@ class InstructorController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/instructors/{id}",
+     *   tags={"Instructors"},
+     *   summary="Get instructor by ID",
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Instructor details"),
+     *   @OA\Response(response=404, description="Instructor not found")
+     * )
+     */
     public function show($id)
     {
         try {
@@ -71,6 +108,23 @@ class InstructorController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/instructors/{id}",
+     *   tags={"Instructors"},
+     *   summary="Update instructor",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\RequestBody(@OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *     @OA\Property(property="name", type="string"),
+     *     @OA\Property(property="email", type="string"),
+     *     @OA\Property(property="bio", type="string"),
+     *     @OA\Property(property="image", type="string", format="binary")
+     *   ))),
+     *   @OA\Response(response=200, description="Instructor updated"),
+     *   @OA\Response(response=404, description="Instructor not found")
+     * )
+     */
     public function update(InstructorRequest $request, $id)
     {
         try {
@@ -88,6 +142,17 @@ class InstructorController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *   path="/instructors/{id}",
+     *   tags={"Instructors"},
+     *   summary="Delete instructor",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Instructor deleted"),
+     *   @OA\Response(response=404, description="Instructor not found")
+     * )
+     */
     public function destroy($id)
     {
         try {

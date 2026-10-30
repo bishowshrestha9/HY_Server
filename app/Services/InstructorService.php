@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Interfaces\InstructorRepositoryInterface;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class InstructorService
@@ -20,7 +19,7 @@ class InstructorService
         $instructors = $this->instructorRepository->getAll();
 
         $instructors->transform(function ($instructor) {
-            $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
+            $instructor->image_url = $instructor->image ? $this->publicAssetUrl($instructor->image) : null;
             return $instructor;
         });
 
@@ -30,12 +29,11 @@ class InstructorService
     public function createInstructor(array $data, $imageFile = null)
     {
         if ($imageFile) {
-            $tempPath = $imageFile->store('temp/instructors', 'public');
             $extension = $imageFile->getClientOriginalExtension();
             $filename = 'instructor_' . time() . '_' . Str::random(10) . '.' . $extension;
-            $permanentPath = 'instructors/' . $filename;
-            Storage::disk('public')->move($tempPath, $permanentPath);
-            $data['image'] = $permanentPath;
+            $this->ensurePublicDirectoryExists('instructors');
+            $imageFile->move(public_path('instructors'), $filename);
+            $data['image'] = 'instructors/' . $filename;
         }
 
         return $this->instructorRepository->create($data);
@@ -45,7 +43,7 @@ class InstructorService
     {
         $instructor = $this->instructorRepository->findById($id);
         if ($instructor) {
-            $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
+            $instructor->image_url = $instructor->image ? $this->publicAssetUrl($instructor->image) : null;
         }
         return $instructor;
     }
@@ -57,16 +55,13 @@ class InstructorService
             return null;
 
         if ($imageFile) {
-            if ($instructor->image && Storage::disk('public')->exists($instructor->image)) {
-                Storage::disk('public')->delete($instructor->image);
-            }
+            $this->deletePublicFile($instructor->image);
 
-            $tempPath = $imageFile->store('temp/instructors', 'public');
             $extension = $imageFile->getClientOriginalExtension();
             $filename = 'instructor_' . time() . '_' . Str::random(10) . '.' . $extension;
-            $permanentPath = 'instructors/' . $filename;
-            Storage::disk('public')->move($tempPath, $permanentPath);
-            $data['image'] = $permanentPath;
+            $this->ensurePublicDirectoryExists('instructors');
+            $imageFile->move(public_path('instructors'), $filename);
+            $data['image'] = 'instructors/' . $filename;
         }
 
         return $this->instructorRepository->update($id, $data);
@@ -78,10 +73,67 @@ class InstructorService
         if (!$instructor)
             return false;
 
-        if ($instructor->image && Storage::disk('public')->exists($instructor->image)) {
-            Storage::disk('public')->delete($instructor->image);
-        }
+        $this->deletePublicFile($instructor->image);
 
         return $this->instructorRepository->delete($id);
+    }
+
+    private function publicAssetUrl(string $path): string
+    {
+        $cleanPath = ltrim($path, '/');
+
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, strlen('storage/'));
+        }
+
+        $publicPath = public_path($cleanPath);
+
+        if (!file_exists($publicPath)) {
+            $storagePath = storage_path('app/public/' . $cleanPath);
+
+            if (file_exists($storagePath)) {
+                $this->ensurePublicDirectoryExists(dirname($cleanPath));
+                @copy($storagePath, $publicPath);
+            }
+        }
+
+        return asset($cleanPath);
+    }
+
+    private function deletePublicFile(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $cleanPath = ltrim($path, '/');
+
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, strlen('storage/'));
+        }
+
+        $publicPath = public_path($cleanPath);
+        $storagePath = storage_path('app/public/' . $cleanPath);
+
+        if (file_exists($publicPath)) {
+            @unlink($publicPath);
+        }
+
+        if (file_exists($storagePath)) {
+            @unlink($storagePath);
+        }
+    }
+
+    private function ensurePublicDirectoryExists(string $directory): void
+    {
+        if ($directory === '.' || $directory === '') {
+            return;
+        }
+
+        $path = public_path($directory);
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
     }
 }

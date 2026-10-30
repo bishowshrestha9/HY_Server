@@ -18,6 +18,13 @@ class UserSeeder extends Seeder
                 'role' => 'admin',
             ],
             [
+
+                'name ' => 'Sita Thapa',
+                'email' => 'sita.thapa@nepal.com',
+                'password' => Hash::make('password123'),
+                'role' => 'user',
+            ],
+            [
                 'name' => 'Pramila Rai',
                 'email' => 'pramila.rai@nepal.com',
                 'password' => Hash::make('password123'),

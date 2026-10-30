@@ -15,8 +15,20 @@ class InquiryController extends Controller
     public function __construct(InquiryService $inquiryService)
     {
         $this->inquiryService = $inquiryService;
+        
     }
 
+    /**
+     * @OA\Get(
+     *   path="/inquiries",
+     *   tags={"Inquiries"},
+     *   summary="Get all inquiries",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="List of inquiries"),
+     *   @OA\Response(response=404, description="No inquiries found")
+     * )
+     */
     public function index(Request $request)
     {
         try {
@@ -45,6 +57,21 @@ class InquiryController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/inquiries",
+     *   tags={"Inquiries"},
+     *   summary="Submit an inquiry",
+     *   @OA\RequestBody(required=true, @OA\JsonContent(
+     *     required={"name","email","message"},
+     *     @OA\Property(property="name", type="string"),
+     *     @OA\Property(property="email", type="string"),
+     *     @OA\Property(property="message", type="string")
+     *   )),
+     *   @OA\Response(response=201, description="Inquiry submitted"),
+     *   @OA\Response(response=400, description="Validation error")
+     * )
+     */
     public function store(InquiryRequest $request)
     {
         try {
@@ -69,6 +96,17 @@ class InquiryController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/inquiries/{id}",
+     *   tags={"Inquiries"},
+     *   summary="Get specific inquiry",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Inquiry fetched"),
+     *   @OA\Response(response=404, description="Inquiry not found")
+     * )
+     */
     public function show($id)
     {
         try {
@@ -90,6 +128,17 @@ class InquiryController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *   path="/inquiries/{id}",
+     *   tags={"Inquiries"},
+     *   summary="Delete an inquiry",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Inquiry deleted"),
+     *   @OA\Response(response=404, description="Inquiry not found")
+     * )
+     */
     public function destroy($id)
     {
         try {
@@ -107,6 +156,15 @@ class InquiryController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/inquiries/total",
+     *   tags={"Inquiries"},
+     *   summary="Get total inquiries count",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Total inquiries count")
+     * )
+     */
     public function getTotalInquiry()
     {
         $total = $this->inquiryService->getTotalInquiriesCount();

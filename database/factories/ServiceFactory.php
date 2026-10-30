@@ -27,7 +27,7 @@ class ServiceFactory extends Factory
             'yoga_type' => fake()->randomElement(['basic', 'intermediate', 'advanced']),
             'price' => fake()->randomFloat(2, 10, 500),
             'capacity' => fake()->numberBetween(5, 50),
-            'currency' => fake()->randomElement(['USD', 'NRS', 'GBP', 'INR']),
+            'currency' => fake()->randomElement(['USD', 'NPR']),
             'instructor_id' => Instructor::factory(),
             'images' => [fake()->imageUrl(640, 480, 'yoga', true), fake()->imageUrl(640, 480, 'nature', true)],
             'is_active' => true,

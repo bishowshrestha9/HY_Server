@@ -15,6 +15,23 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
+    /**
+     * @OA\Post(
+     *   path="/auth/login",
+     *   tags={"Authentication"},
+     *   summary="User login",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"email","password"},
+     *       @OA\Property(property="email", type="string", format="email"),
+     *       @OA\Property(property="password", type="string")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="Login successful"),
+     *   @OA\Response(response=401, description="Invalid credentials")
+     * )
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -67,6 +84,17 @@ class AuthController extends Controller
         return $response;
     }
 
+
+    /**
+     * @OA\Get(
+     *   path="/auth/logout",
+     *   tags={"Authentication"},
+     *   summary="User logout",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Response(response=200, description="Logout successful"),
+     *   @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request)
     {
         $result = $this->authService->logout($request->user());
@@ -74,6 +102,15 @@ class AuthController extends Controller
         return response()->json($result);
     }
 
+    /**
+     * @OA\Get(
+     *   path="/user",
+     *   tags={"Authentication"},
+     *   summary="Get current user info",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Current user information")
+     * )
+     */
     public function me(Request $request)
     {
         return response()->json([

@@ -38,6 +38,12 @@ class Payment extends Model
         'updated_at' => 'datetime',
     ];
 
+    // Allowed currencies (DB enum values)
+    public const CURRENCIES = [
+        'USD',
+        'NPR',
+    ];
+
     // Status constants
     const STATUS_PENDING = 'pending';
     const STATUS_SUCCEEDED = 'succeeded';
@@ -116,6 +122,26 @@ class Payment extends Model
     public function getFormattedAmountAttribute(): string
     {
         return strtoupper($this->currency) . ' ' . number_format((float) $this->amount, 2);
+    }
+
+    /**
+     * Ensure currency is stored in uppercase and valid format.
+     */
+    public function setCurrencyAttribute($value)
+    {
+        if (is_null($value)) {
+            $this->attributes['currency'] = null;
+            return;
+        }
+
+        $val = strtoupper((string) $value);
+
+        // If incoming currency isn't in allowed list, fall back to default 'NPR'
+        if (!in_array($val, self::CURRENCIES, true)) {
+            $val = 'NPR';
+        }
+
+        $this->attributes['currency'] = $val;
     }
 
     public function markAsCanceled(): self

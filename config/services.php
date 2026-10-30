@@ -71,6 +71,7 @@ return [
         'pap_info' => env('GETPAY_PAP_INFO'),
         'opr_key' => env('GETPAY_OPR_KEY'),
         'ins_key' => env('GETPAY_INS_KEY'),
+        'currency' => env('GETPAY_CURRENCY', 'NPR'),
         'base_url' => env('GETPAY_BASE_URL', 'https://getpay-uat.machbank.com/ecom-gateway/v1/secure-merchant/transactions'),
         'bundle_url' => env('GETPAY_BUNDLE_URL', 'https://minio.finpos.global/getpay-cdn/webcheckout/v5/bundle.js'),
         'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),

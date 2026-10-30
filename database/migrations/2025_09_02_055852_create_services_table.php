@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->json('benefits');
             $table->decimal('price', 8, 2);
             $table->integer('capacity');
-            $table->enum('currency', ['USD', 'NRS', 'GBP', 'INR'])->default('NRS');
+            $table->enum('currency', ['USD', 'NRS'])->default('NRS');
             $table->json('class_schedule');
             $table->string('session_time')->nullable();
             $table->foreignId('instructor_id')->constrained('instructors')->onDelete('cascade');

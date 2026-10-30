@@ -27,6 +27,9 @@ class ReviewService
             throw new Exception('You can only submit one review per hour with this email address.', 429);
         }
 
+        // Always force status to false — reviews must be explicitly approved by admin
+        $data['status'] = false;
+
         $review = $this->reviewRepository->create($data);
 
         // Store review as a lead
@@ -40,7 +43,7 @@ class ReviewService
                 'review_id' => $review->id,
                 'rating' => $data['rating'],
                 'review_text' => $data['review'],
-                'status' => $data['status'],
+                'status' => false, // new reviews are always pending
             ],
         ]);
 
@@ -61,7 +64,7 @@ class ReviewService
     public function getPublishableReviews($perPage = 8)
     {
         $reviews = Reviews::with('service')
-            ->where('status', 1)
+            ->where('status', true)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
@@ -79,7 +82,19 @@ class ReviewService
 
     public function approveReview($id)
     {
-        return $this->reviewRepository->update($id, ['status' => true]);
+        $review = $this->reviewRepository->update($id, ['status' => true]);
+
+        if ($review) {
+            // Also update any corresponding Lead status
+            \App\Models\Lead::where('source', 'review')
+                ->where('metadata->review_id', $review->id)
+                ->update([
+                    'status' => 'converted',
+                    'metadata->status' => true,
+                ]);
+        }
+
+        return $review;
     }
 
     public function getLatestReviews($limit = 4)
@@ -117,12 +132,9 @@ class ReviewService
             'review' => $review->review,
             'rating' => $review->rating,
             'service' => $review->service ? $review->service->title : null,
+            'status' => (bool) $review->status,
             'created_at' => is_string($review->created_at) ? $review->created_at : $review->created_at->toDateString(), // Ensure generic format
         ];
-
-        if (!$simple) {
-            $data['status'] = $review->status;
-        }
 
         return $data;
     }

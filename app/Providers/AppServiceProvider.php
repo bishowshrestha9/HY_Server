@@ -6,10 +6,12 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
-{
+{//this is only a comment 
     /**
      * Register any application services.
      */
+    // This method is for binding service into the containers 
+    
     public function register(): void
     {
         //

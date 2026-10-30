@@ -150,7 +150,8 @@ Route::get('/service/top-six', [ServiceController::class, 'getTopSixServices']);
 
 Route::get('/reviews/four', [ReviewController::class, 'getFourReviews']);
 
-Route::get('/reviews/publishable', [ReviewController::class, 'getPublishableReviews']);
+
+
 
 
 

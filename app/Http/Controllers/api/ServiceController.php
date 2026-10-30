@@ -17,6 +17,16 @@ class ServiceController extends Controller
         $this->serviceService = $serviceService;
     }
 
+    /**
+     * @OA\Get(
+     *   path="/services",
+     *   tags={"Services"},
+     *   summary="Get all services",
+     *   @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="List of services"),
+     *   @OA\Response(response=404, description="No services found")
+     * )
+     */
     public function index(Request $request)
     {
         try {
@@ -45,6 +55,23 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/services",
+     *   tags={"Services"},
+     *   summary="Create new service",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *     required={"title","description"},
+     *     @OA\Property(property="title", type="string"),
+     *     @OA\Property(property="slug", type="string"),
+     *     @OA\Property(property="description", type="string"),
+     *     @OA\Property(property="image", type="string", format="binary")
+     * ))),
+     *   @OA\Response(response=201, description="Service created"),
+     *   @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function store(ServiceRequest $request)
     {
         try {
@@ -58,6 +85,16 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/services/{slug}",
+     *   tags={"Services"},
+     *   summary="Get service by slug",
+     *   @OA\Parameter(name="slug", in="path", required=true, @OA\Schema(type="string")),
+     *   @OA\Response(response=200, description="Service details"),
+     *   @OA\Response(response=404, description="Service not found")
+     * )
+     */
     public function show($slug)
     {
         try {
@@ -79,6 +116,22 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/services/{id}",
+     *   tags={"Services"},
+     *   summary="Update service",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\RequestBody(@OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *     @OA\Property(property="title", type="string"),
+     *     @OA\Property(property="description", type="string"),
+     *     @OA\Property(property="images", type="string", format="binary")
+     *   ))),
+     *   @OA\Response(response=200, description="Service updated"),
+     *   @OA\Response(response=404, description="Service not found")
+     * )
+     */
     public function update(ServiceRequest $request, $id)
     {
         try {
@@ -96,6 +149,17 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *   path="/services/{id}",
+     *   tags={"Services"},
+     *   summary="Delete service",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Service deleted"),
+     *   @OA\Response(response=404, description="Service not found")
+     * )
+     */
     public function destroy($id)
     {
         try {
@@ -113,6 +177,17 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/services/{id}/toggle-status",
+     *   tags={"Services"},
+     *   summary="Toggle service status",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Service status toggled"),
+     *   @OA\Response(response=404, description="Service not found")
+     * )
+     */
     public function toggleStatus($id)
     {
         try {
@@ -134,6 +209,14 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/service/idname",
+     *   tags={"Services"},
+     *   summary="Get service id and name list",
+     *   @OA\Response(response=200, description="List of id and name pairs")
+     * )
+     */
     public function getServiceIdAndName()
     {
         try {
@@ -146,6 +229,14 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/service/top-six",
+     *   tags={"Services"},
+     *   summary="Get top six services",
+     *   @OA\Response(response=200, description="Top six services")
+     * )
+     */
     public function getTopSixServices()
     {
         try {
@@ -162,6 +253,15 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/services/total",
+     *   tags={"Services"},
+     *   summary="Get total services count",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Total services count")
+     * )
+     */
     public function getTotalServices()
     {
         try {

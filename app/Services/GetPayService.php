@@ -10,6 +10,7 @@ class GetPayService
     private string $papInfo;
     private string $oprKey;
     private string $insKey;
+    private string $currency;
     private string $baseUrl;
     private string $bundleUrl;
     private string $frontendUrl;
@@ -18,14 +19,15 @@ class GetPayService
 
     public function __construct()
     {
-        $this->papInfo = config('services.getpay.pap_info');
-        $this->oprKey = config('services.getpay.opr_key');
-        $this->insKey = config('services.getpay.ins_key');
-        $this->baseUrl = config('services.getpay.base_url');
-        $this->bundleUrl = config('services.getpay.bundle_url');
-        $this->frontendUrl = config('services.getpay.frontend_url');
-        $this->successUrl = config('services.getpay.success_url');
-        $this->failureUrl = config('services.getpay.failure_url');
+        $this->papInfo = trim((string) config('services.getpay.pap_info'));
+        $this->oprKey = trim((string) config('services.getpay.opr_key'));
+        $this->insKey = trim((string) config('services.getpay.ins_key'));
+        $this->currency = trim((string) config('services.getpay.currency', 'NPR'));
+        $this->baseUrl = trim((string) config('services.getpay.base_url'));
+        $this->bundleUrl = trim((string) config('services.getpay.bundle_url'));
+        $this->frontendUrl = trim((string) config('services.getpay.frontend_url'));
+        $this->successUrl = trim((string) config('services.getpay.success_url'));
+        $this->failureUrl = trim((string) config('services.getpay.failure_url'));
     }
 
     /**
@@ -37,6 +39,7 @@ class GetPayService
             'papInfo' => $this->papInfo,
             'oprKey' => $this->oprKey,
             'insKey' => $this->insKey,
+            'currency' => $this->currency,
             'baseUrl' => $this->baseUrl,
             'bundleUrl' => $this->bundleUrl,
             'websiteDomain' => $this->frontendUrl,

@@ -55,45 +55,55 @@ class GetPayController extends Controller
     {
         try {
             $validated = $request->validate([
-                'token' => 'required|string',
+                'token' => 'nullable|string',
+                'transaction_id' => 'nullable|string',
+                'id' => 'nullable|string',
                 'booking_id' => 'required|integer|exists:bookings,id',
             ]);
 
-            $token = $validated['token'];
+            $token = $request->input('token');
+            $transactionId = $request->input('transaction_id') ?? $request->input('id');
             $bookingId = $validated['booking_id'];
 
             Log::info('GetPay payment verification started', [
                 'booking_id' => $bookingId,
-                'token_preview' => substr($token, 0, 20) . '...',
+                'token_preview' => $token ? substr($token, 0, 20) . '...' : null,
+                'transaction_id' => $transactionId,
             ]);
 
-            // Decode token to get transaction ID and oprSecret
-            $tokenData = $this->getPayService->decodeToken($token);
+            if ($token) {
+                // Decode token to get transaction ID and oprSecret
+                $tokenData = $this->getPayService->decodeToken($token);
 
-            if (!$tokenData) {
-                Log::warning('Invalid GetPay token', ['booking_id' => $bookingId]);
-                
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid payment token',
-                ], 400);
+                if ($tokenData) {
+                    $transactionId = $tokenData['transaction_id'];
+                    $oprSecret = $tokenData['opr_secret'];
+
+                    // Verify signature
+                    $isSignatureValid = $this->getPayService->verifySignature($transactionId, $oprSecret);
+
+                    if (!$isSignatureValid) {
+                        Log::warning('GetPay signature verification failed', [
+                            'transaction_id' => $transactionId,
+                            'booking_id' => $bookingId,
+                        ]);
+
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Payment verification failed - invalid signature',
+                        ], 400);
+                    }
+                }
             }
 
-            $transactionId = $tokenData['transaction_id'];
-            $oprSecret = $tokenData['opr_secret'];
-
-            // Verify signature
-            $isSignatureValid = $this->getPayService->verifySignature($transactionId, $oprSecret);
-
-            if (!$isSignatureValid) {
-                Log::warning('GetPay signature verification failed', [
-                    'transaction_id' => $transactionId,
+            if (!$transactionId) {
+                Log::warning('GetPay verification failed - missing transaction ID and token', [
                     'booking_id' => $bookingId,
                 ]);
 
                 return response()->json([
                     'status' => false,
-                    'message' => 'Payment verification failed - invalid signature',
+                    'message' => 'Missing payment transaction ID or token',
                 ], 400);
             }
 
@@ -115,10 +125,18 @@ class GetPayController extends Controller
 
             $paymentData = $verificationResult['data'];
             
-            // Check if payment was successful
-            $paymentStatus = strtolower($paymentData['status'] ?? $paymentData['transactionStatus'] ?? 'unknown');
-            
-            if (in_array($paymentStatus, ['success', 'completed', 'approved'])) {
+            // Check if payment was successful (MachBank / CyberSource returns status: 0, message: "SUCCESS", insCode: "000")
+            $rawStatus = $paymentData['status'] ?? $paymentData['transactionStatus'] ?? 'unknown';
+            $paymentStatus = strtolower((string) $rawStatus);
+            $paymentMessage = strtoupper((string) ($paymentData['message'] ?? ''));
+            $insCode = $paymentData['data']['insCode'] ?? null;
+
+            $isSuccessful = in_array($paymentStatus, ['success', 'completed', 'approved', '0']) 
+                || $paymentMessage === 'SUCCESS' 
+                || $insCode === '000' 
+                || $rawStatus === 0;
+
+            if ($isSuccessful) {
                 // Update booking status to confirmed
                 $booking = $this->bookingService->updateStatus($bookingId, 'confirmed');
 

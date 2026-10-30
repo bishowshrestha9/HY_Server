@@ -16,7 +16,7 @@ class BannerRequest extends FormRequest
         return [
             'banner_text' => 'required|string|max:255',
             'banner_link' => 'required|string',
-            'is_active' => 'required|boolean',
+            'is_active' => 'required|in:active,inactive,1,0,true,false,y,n',
             'background_color' => 'required|string',
             'text_color' => 'required|string',
         ];

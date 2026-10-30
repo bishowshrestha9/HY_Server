@@ -13,6 +13,7 @@ class DashboardController extends Controller
     public function __construct(DashboardService $dashboardService)
     {
         $this->dashboardService = $dashboardService;
+
     }
 
     public function getDashboardData()
@@ -29,6 +30,7 @@ class DashboardController extends Controller
             \Log::error($e->getMessage());
             return response()->json([
                 'status' => false,
+                'data' => null,
                 'message' => 'Failed to fetch dashboard data',
             ], 500);
         }

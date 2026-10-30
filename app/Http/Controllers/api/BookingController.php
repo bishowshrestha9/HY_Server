@@ -13,10 +13,20 @@ class BookingController extends Controller
     private BookingService $bookingService;
 
     public function __construct(BookingService $bookingService)
+    
     {
         $this->bookingService = $bookingService;
     }
 
+    /**
+     * @OA\Get(
+     *   path="/bookings",
+     *   tags={"Bookings"},
+     *   summary="Get all bookings",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="List of bookings")
+     * )
+     */
     public function index()
     {
         try {
@@ -33,6 +43,17 @@ class BookingController extends Controller
         }
     }
 
+    /**
+     * @OA\Put(
+     *   path="/bookings/{id}/status",
+     *   tags={"Bookings"},
+     *   summary="Update booking status",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\RequestBody(required=true, @OA\JsonContent(@OA\Property(property="status", type="string"))),
+     *   @OA\Response(response=200, description="Booking status updated")
+     * )
+     */
     public function updateStatus(Request $request, $id)
     {
         try {
@@ -57,6 +78,20 @@ class BookingController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/bookings",
+     *   tags={"Bookings"},
+     *   summary="Create new booking",
+     *   @OA\RequestBody(required=true, @OA\JsonContent(
+     *     required={"service_id","user_name","email"},
+     *     @OA\Property(property="service_id", type="integer"),
+     *     @OA\Property(property="user_name", type="string"),
+     *     @OA\Property(property="email", type="string")
+     *   )),
+     *   @OA\Response(response=201, description="Booking created")
+     * )
+     */
     public function store(BookingRequest $request)
     {
         try {
@@ -72,6 +107,15 @@ class BookingController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/bookings/total",
+     *   tags={"Bookings"},
+     *   summary="Get total bookings count",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Total bookings count")
+     * )
+     */
     public function getTotalBookings()
     {
         try {
@@ -83,6 +127,15 @@ class BookingController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/bookings/monthly-revenue",
+     *   tags={"Bookings"},
+     *   summary="Get monthly revenue",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Monthly revenue data")
+     * )
+     */
     public function getMonthlyRevenue()
     {
         try {

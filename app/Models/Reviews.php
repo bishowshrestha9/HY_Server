@@ -8,6 +8,10 @@ class Reviews extends Model
 {
     protected $fillable = ['name', 'email', 'review', 'rating', 'status', 'service_id'];
 
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
     public function service()
     {
         return $this->belongsTo(Service::class);

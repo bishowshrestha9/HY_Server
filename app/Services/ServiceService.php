@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Interfaces\ServiceRepositoryInterface;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Service; // Needed for specific query in getTopSixServices if generic repo is insufficient, or extend interface
 
@@ -56,13 +55,13 @@ class ServiceService
 
         if ($images) {
             $imagePaths = [];
+            $this->ensurePublicDirectoryExists('services');
+
             foreach ($images as $image) {
-                $tempPath = $image->store('temp/services', 'public');
                 $extension = $image->getClientOriginalExtension();
                 $filename = 'service_' . time() . '_' . Str::random(10) . '.' . $extension;
-                $permanentPath = 'services/' . $filename;
-                Storage::disk('public')->move($tempPath, $permanentPath);
-                $imagePaths[] = $permanentPath;
+                $image->move(public_path('services'), $filename);
+                $imagePaths[] = 'services/' . $filename;
             }
             $data['images'] = $imagePaths;
         }
@@ -102,20 +101,18 @@ class ServiceService
             // Delete old images
             if ($service->images) {
                 foreach ($service->images as $oldImage) {
-                    if (Storage::disk('public')->exists($oldImage)) {
-                        Storage::disk('public')->delete($oldImage);
-                    }
+                    $this->deletePublicFile($oldImage);
                 }
             }
 
             $imagePaths = [];
+            $this->ensurePublicDirectoryExists('services');
+
             foreach ($images as $image) {
-                $tempPath = $image->store('temp/services', 'public');
                 $extension = $image->getClientOriginalExtension();
                 $filename = 'service_' . time() . '_' . Str::random(10) . '.' . $extension;
-                $permanentPath = 'services/' . $filename;
-                Storage::disk('public')->move($tempPath, $permanentPath);
-                $imagePaths[] = $permanentPath;
+                $image->move(public_path('services'), $filename);
+                $imagePaths[] = 'services/' . $filename;
             }
             $data['images'] = $imagePaths;
         }
@@ -131,9 +128,7 @@ class ServiceService
 
         if ($service->images) {
             foreach ($service->images as $image) {
-                if (Storage::disk('public')->exists($image)) {
-                    Storage::disk('public')->delete($image);
-                }
+                $this->deletePublicFile($image);
             }
         }
 
@@ -180,7 +175,7 @@ class ServiceService
     private function transformService($service)
     {
         $service->image_urls = $service->images ? array_map(function ($image) {
-            return url('storage/' . $image);
+            return $this->publicAssetUrl($image);
         }, $service->images) : [];
 
         // Transform pricing_options to include full URLs for images
@@ -192,7 +187,7 @@ class ServiceService
                         if (filter_var($image, FILTER_VALIDATE_URL)) {
                             return $image;
                         }
-                        return url('storage/' . $image);
+                        return $this->publicAssetUrl($image);
                     }, $option['images']);
                 }
                 return $option;
@@ -219,12 +214,71 @@ class ServiceService
                 'label' => $option['label'] ?? null,
                 'price' => (float)($option['price'] ?? 0),
                 'discount_price' => isset($option['discount_price']) ? (float)$option['discount_price'] : null,
-                'currency' => $option['currency'] ?? 'USD',
+                'currency' => $option['currency'] ?? 'NPR',
                 'min_pax' => (int)($option['min_pax'] ?? 1),
                 'max_pax' => (int)($option['max_pax'] ?? 1),
                 'description' => $option['description'] ?? null,
                 'images' => isset($option['images']) && is_array($option['images']) ? $option['images'] : [],
             ];
         }, $pricingOptions);
+    }
+
+    private function publicAssetUrl(string $path): string
+    {
+        $cleanPath = ltrim($path, '/');
+
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, strlen('storage/'));
+        }
+
+        $publicPath = public_path($cleanPath);
+
+        if (!file_exists($publicPath)) {
+            $storagePath = storage_path('app/public/' . $cleanPath);
+
+            if (file_exists($storagePath)) {
+                $this->ensurePublicDirectoryExists(dirname($cleanPath));
+                @copy($storagePath, $publicPath);
+            }
+        }
+
+        return asset($cleanPath);
+    }
+
+    private function deletePublicFile(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $cleanPath = ltrim($path, '/');
+
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, strlen('storage/'));
+        }
+
+        $publicPath = public_path($cleanPath);
+        $storagePath = storage_path('app/public/' . $cleanPath);
+
+        if (file_exists($publicPath)) {
+            @unlink($publicPath);
+        }
+
+        if (file_exists($storagePath)) {
+            @unlink($storagePath);
+        }
+    }
+
+    private function ensurePublicDirectoryExists(string $directory): void
+    {
+        if ($directory === '.' || $directory === '') {
+            return;
+        }
+
+        $path = public_path($directory);
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
     }
 }

@@ -17,6 +17,16 @@ class BlogsController extends Controller
         $this->blogService = $blogService;
     }
 
+    /**
+     * @OA\Get(
+     *   path="/blogs",
+     *   tags={"Blogs"},
+     *   summary="Get all blogs",
+     *   @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="List of blogs"),
+     *   @OA\Response(response=404, description="No blogs found")
+     * )
+     */
     public function index(Request $request)
     {
         try {
@@ -45,6 +55,25 @@ class BlogsController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/blogs",
+     *   tags={"Blogs"},
+     *   summary="Create new blog",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *       required={"title","content"},
+     *       @OA\Property(property="title", type="string"),
+     *       @OA\Property(property="content", type="string"),
+     *       @OA\Property(property="image", type="string", format="binary")
+     *     ))
+     *   ),
+     *   @OA\Response(response=201, description="Blog created"),
+     *   @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function store(BlogRequest $request)
     {
         try {
@@ -61,6 +90,16 @@ class BlogsController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/blogs/{id}",
+     *   tags={"Blogs"},
+     *   summary="Get blog by ID",
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Blog details"),
+     *   @OA\Response(response=404, description="Blog not found")
+     * )
+     */
     public function show($title)
     {
         try {
@@ -78,6 +117,22 @@ class BlogsController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *   path="/blogs/{id}",
+     *   tags={"Blogs"},
+     *   summary="Update blog",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\RequestBody(@OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *     @OA\Property(property="title", type="string"),
+     *     @OA\Property(property="content", type="string"),
+     *     @OA\Property(property="image", type="string", format="binary")
+     *   ))),
+     *   @OA\Response(response=200, description="Blog updated"),
+     *   @OA\Response(response=404, description="Blog not found")
+     * )
+     */
     public function update(BlogRequest $request, $id)
     {
         try {
@@ -98,6 +153,17 @@ class BlogsController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *   path="/blogs/{id}",
+     *   tags={"Blogs"},
+     *   summary="Delete blog",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *   @OA\Response(response=200, description="Blog deleted"),
+     *   @OA\Response(response=404, description="Blog not found")
+     * )
+     */
     public function destroy($id)
     {
         try {
@@ -115,6 +181,15 @@ class BlogsController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *   path="/blogs/total",
+     *   tags={"Blogs"},
+     *   summary="Get total blogs count",
+     *   security={{"bearerAuth":{},"cookieAuth":{}}},
+     *   @OA\Response(response=200, description="Total blogs count")
+     * )
+     */
     public function getTotalBlogs()
     {
         $total = $this->blogService->getTotalBlogsCount();

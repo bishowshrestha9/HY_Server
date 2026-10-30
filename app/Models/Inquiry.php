@@ -25,3 +25,10 @@ class Inquiry extends Model
 
 
 }
+//This is just comment for testing purpose.
+//This is not just a comment for testing this is for also for testing purpose.
+//Very Important comment for testing purpose.
+//This ios just a part of comment 
+//This is just a part of comment for testing purpose.
+//Bishow Shrestha is just my name not my identity.
+

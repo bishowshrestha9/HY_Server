@@ -22,11 +22,11 @@ class ReviewsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'name'   => 'required|string|max:255',
+            'email'  => 'required|email|max:255',
             'review' => 'required|string',
             'rating' => 'required|numeric|min:1|max:5',
-            'status' => 'boolean',
+            // Note: 'status' is intentionally excluded — it is always set server-side
         ];
     }
 
